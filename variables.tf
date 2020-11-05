@@ -13,6 +13,10 @@ variable "secret_key" {
   description = "AWS Secret Key"
 }
 
+variable "project" {
+  type = string
+}
+
 variable "cluster_name" {
   type        = string
   description = "EKS name"
@@ -29,34 +33,27 @@ variable "number_of_subnets" {
   description = "Number of subnets"
 }
 
-variable "iam_master_name" {
-  type = string
-  default = "terraform-eks-master"
-  description = "IAM master name"
-}
-
-variable "iam_worker_name" {
-  type = string
-  default = "terraform-eks-worker"
-  description = "IAM worker name"
-}
-
 variable "iam_worker_instance_profile_name" {
-  type = string
-  default = "terraform-eks-worker"
+  type        = string
+  default     = "ipaas-eks-workers"
   description = "IAM worker instance profile name"
 }
 
 variable "kubeconfig_path" {
-  type = string
-  default = "./kubeconfig"
+  type        = string
+  default     = "./kubeconfig"
   description = "Kubeconfig path"
 }
 
+variable "create_kubeconfig" {
+  type        = bool
+  default     = true
+}
+
 variable "kubernetes_version" {
-  type = string
-  default = "1.14"
-  description = "EKS kubernetes version. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS."
+  type        = string
+  default     = "1.18"
+  description = "EKS kubernetes version."
 }
 
 variable "node_groups" {
@@ -72,11 +69,11 @@ variable "node_groups" {
   }))
   default = [
     {
-      name          = "node-example"
-      desired_size  = 1
+      name          = "example"
+      desired_size  = 2
       max_size      = 3
       min_size      = 1
-      instance_type = "t3.micro"
+      instance_type = "t3.medium"
     }
   ]
 }

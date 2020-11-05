@@ -1,38 +1,24 @@
-# save the 'terraform output eks_kubeconfig > config', run 'mv config ~/.kube/config' to use it for kubectl
-locals {
-  kubeconfig = <<KUBECONFIG
-apiVersion: v1
-clusters:
-- cluster:
-    server: ${aws_eks_cluster.tf_eks.endpoint}
-    certificate-authority-data: ${aws_eks_cluster.tf_eks.certificate_authority.0.data}
-  name: kubernetes
-contexts:
-- context:
-    cluster: kubernetes
-    user: aws
-  name: aws
-current-context: aws
-kind: Config
-preferences: {}
-users:
-- name: aws
-  user:
-    exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
-      command: aws
-      args:
-        - --region
-        - "${var.region}"
-        - eks
-        - get-token
-        - --cluster-name
-        - "${var.cluster_name}"
-KUBECONFIG
+data "aws_eks_cluster_auth" "ipaas" {
+  name = local.cluster_name
 }
 
-resource "local_file" "kube-config" {
-  content  = local.kubeconfig
-  filename = var.kubeconfig_path
-  depends_on = [ aws_eks_cluster.tf_eks ] 
+data "template_file" "kubeconfig" {
+  count = var.create_kubeconfig ? 1 : 0
+  template = file("${path.module}/kubeconfig.tpl")
+
+  vars = {
+    region       = var.region
+    cluster_name = local.cluster_name
+    endpoint     = aws_eks_cluster.tf_eks.endpoint
+    ca           = aws_eks_cluster.tf_eks.certificate_authority[0].data
+  }
+
+  depends_on = [aws_eks_cluster.tf_eks]
+}
+
+resource "local_file" "kubeconfig" {
+  count           = var.create_kubeconfig ? 1 : 0
+  content         = data.template_file.kubeconfig[0].rendered
+  filename        = var.kubeconfig_path
+  file_permission = 600
 }

@@ -1,11 +1,15 @@
 resource "aws_eks_cluster" "tf_eks" {
-  name     = var.cluster_name
-  role_arn = aws_iam_role.master.arn
-  version  = var.kubernetes_version
+  name                      = local.cluster_name
+  role_arn                  = aws_iam_role.master.arn
+  version                   = var.kubernetes_version
 
   vpc_config {
     security_group_ids = [aws_security_group.master.id]
     subnet_ids         = aws_subnet.eks[*].id
+  }
+
+  tags = {
+    project = var.project
   }
 
   depends_on = [
@@ -15,9 +19,9 @@ resource "aws_eks_cluster" "tf_eks" {
 }
 
 resource "aws_eks_node_group" "workers" {
-  for_each        = local.node_groups_expanded
+  for_each = local.node_groups_expanded
 
-  cluster_name    = var.cluster_name
+  cluster_name    = local.cluster_name
   node_group_name = each.value["name"]
   node_role_arn   = aws_iam_role.worker.arn
   subnet_ids      = aws_subnet.eks[*].id
@@ -33,6 +37,11 @@ resource "aws_eks_node_group" "workers" {
 
   labels = {
     node_group = each.value["name"]
+    project    = var.project
+  }
+
+  tags = {
+    project = var.project
   }
 
   depends_on = [

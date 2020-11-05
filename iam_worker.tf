@@ -11,7 +11,7 @@ data "aws_iam_policy_document" "worker" {
 }
 
 resource "aws_iam_role" "worker" {
-  name = var.iam_worker_name
+  name               = local.iam_worker_name
   assume_role_policy = data.aws_iam_policy_document.worker.json
 }
 

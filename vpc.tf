@@ -3,30 +3,32 @@ data "aws_availability_zones" "available" { }
 resource "aws_vpc" "eks" {
   cidr_block = "10.0.0.0/16"
 
-  tags = {
-    "Name"                                      = "terraform-eks-node"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
+  tags = map(
+    "Name", "${local.vpc_name}",
+    "project", "${var.project}"
+  )
 }
 
 resource "aws_subnet" "eks" {
-  count = var.number_of_subnets
+  count                   = var.number_of_subnets
+  map_public_ip_on_launch = true
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = cidrsubnet(aws_vpc.eks.cidr_block, 8, count.index)
+  vpc_id                  = aws_vpc.eks.id
 
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.eks.cidr_block, 8, count.index) # "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.eks.id
-
-  tags = {
-    "Name"                                      = "terraform-eks-node"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
+  tags = map(
+    "Name", "${local.subnet_name}",
+    "project", "${var.project}",
+    "kubernetes.io/cluster/${local.cluster_name}", "shared"
+  )
 }
 
 resource "aws_internet_gateway" "eks" {
   vpc_id = aws_vpc.eks.id
 
   tags = {
-    Name = "terraform-eks"
+    Name    = local.igw_name
+    project = var.project
   }
 }
 

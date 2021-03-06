@@ -3,7 +3,7 @@ data "aws_eks_cluster_auth" "ipaas" {
 }
 
 data "template_file" "kubeconfig" {
-  count = var.create_kubeconfig ? 1 : 0
+  count    = var.create_kubeconfig ? 1 : 0
   template = file("${path.module}/kubeconfig.tpl")
 
   vars = {

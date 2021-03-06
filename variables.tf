@@ -52,7 +52,7 @@ variable "create_kubeconfig" {
 
 variable "kubernetes_version" {
   type        = string
-  default     = "1.18"
+  default     = "1.19"
   description = "EKS kubernetes version."
 }
 
